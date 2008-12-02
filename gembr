@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+#
+# A little shortcut for browsing source for gems.
+# !sequitur : 2006.12.15
+
+require 'rubygems'
+
+GEMS_ROOT = File.join Gem.dir, 'gems'
+GEMS_DIR  = Dir.new GEMS_ROOT
+
+GEM_NOT_FOUND = "Gem not found in #{GEMS_ROOT}"
+
+# Verifies that the given gem name exists.
+# If a version is not specified, grabs the most recent.
+def find(gem)
+  GEMS_DIR.entries.select { |name| name.include? gem }.last
+end
+
+# If a valid name with a bad version is passed,
+# return a list of known versions.
+def find_similar(gem)
+  gem_name = /^([^-]+)/.match(gem)[1] # everything before the first '-'
+  GEMS_DIR.entries.select { |g| g =~ /^#{gem_name}/ }
+end
+
+# Puts a numbered list of gems.
+def list(similar)
+  similar.each_with_index { |gem,i| puts "#{i + 1}) #{gem}" }
+end
+
+# Prompts the user to select from a list of similar
+# gem names, and returns the selected name.
+def get(similar)
+  valid = 1..similar.size
+  puts "Invalid selection. Enter #{valid.first} - #{valid.last}" while ! valid.include?(selection = gets.to_i)
+  similar[selection-1]
+end
+
+# Launches the default text editor, passing the path
+# to the gem as the only argument.
+def browse!(gem)
+  system "#{ENV['EDITOR']} #{File.join GEMS_ROOT, gem}"
+end
+
+###
+
+if ARGV.empty?
+  puts 'USAGE: gembr gemname'
+  exit
+end
+
+gem = if gem_arg = ARGV.shift
+  find gem_arg
+else
+  puts GEM_NOT_FOUND
+
+  unless (similar = find_similar GEM_ARG).empty?
+    list similar
+    get similar
+  end  
+end
+
+if gem
+  browse! gem
+else
+  puts GEM_NOT_FOUND
+end

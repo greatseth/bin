@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby -w
+
+# A grep script for SVN users. Save your hands some trouble.
+# 
+# USAGE:
+# 
+#   greps foo # search pwd, recursively, for 'foo'
+#   greps foo templates # search pwd/templates, recursively, for 'foo'
+# 
+
+query, directory = ARGV
+
+query = query.gsub(/"|'/, %{["\\\\']})
+
+cmd = "grep -r -i -n -A2 -B2 '#{query}' #{directory or '.'} | grep -v svn | grep -v log | more"
+puts cmd
+system cmd
